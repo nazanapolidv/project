@@ -5,6 +5,11 @@ Todos los cambios notables en el proyecto EcoTrack serán documentados en este a
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), 
 y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.1.1] - 2026-04-12
+
+### Add
+- Maquetado menú
+
 ### Add
 - **Base de Datos:** Creación del script SQL inicial.
 - **Base de Datos:** Tablas para la gestión de tareas, divididas en 5 ejes (Agua, Insumos, Energía, Residuos y Gestión Integral).
