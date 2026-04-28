@@ -19,6 +19,9 @@ public class MenuUsuario implements Menu {
         do {
             seleccion = JOptionPane.showOptionDialog(
                     null,
+
+
+                    
                     "Bienvenido a EcoTrack  |  Puntos acumulados: 150 pts",
                     "Panel Usuario",
                     0, JOptionPane.DEFAULT_OPTION, null,
