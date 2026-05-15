@@ -5,6 +5,14 @@ Todos los cambios notables en el proyecto EcoTrack serán documentados en este a
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), 
 y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.1.3] - 2026-05-14
+
+### Add
+- Registro y login en funcionamiento con BDD
+
+### Change
+- MenuPrincipal, Registro, Conexion y Main para funcionar con BDD sin datos hardcodeados
+
 ## [0.1.2] - 2026-04-16
 
 ### Add

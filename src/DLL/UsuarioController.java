@@ -1,12 +1,11 @@
 package DLL;
 
 import BLL.Usuario;
+import org.mindrot.jbcrypt.BCrypt; 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class UsuarioController {
 
@@ -14,82 +13,44 @@ public class UsuarioController {
         return Conexion.getInstance().getConexion();
     }
 
-    public List<Usuario> listarUsuarios() {
-        List<Usuario> listaUsuarios = new ArrayList<>();
-        String sql = "SELECT id_usuario, nombre, email FROM usuario";
+    public boolean registrarUsuario(Usuario usuario, String passwordPlano) {
+        String sql = "INSERT INTO usuario (email, password_hash) VALUES (?, ?)";
 
-        try (
-            PreparedStatement ps = getConexion().prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()
-        ) {
-            while (rs.next()) {
-                Usuario user = new Usuario();
-                user.setId(rs.getInt("id_usuario"));
-                user.setNombre(rs.getString("nombre"));
-                user.setEmail(rs.getString("email"));
-                listaUsuarios.add(user);
-            }
+        try (PreparedStatement ps = getConexion().prepareStatement(sql)) {
+            ps.setString(1, usuario.getEmail());
+            
+            String hashPassword = BCrypt.hashpw(passwordPlano, BCrypt.gensalt());
+            ps.setString(2, hashPassword);
+            
+            return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("Error al listar usuarios: " + e.getMessage());
+            System.err.println("Error al registrar usuario: " + e.getMessage());
+            return false;
         }
-
-        return listaUsuarios;
     }
 
-    public Usuario buscarPorId(int id) {
-        String sql = "SELECT id_usuario, nombre, email FROM usuario WHERE id_usuario = ?";
+    public Usuario autenticarUsuario(String email, String passwordPlano) {
+        String sql = "SELECT id_usuario, email, password_hash FROM usuario WHERE email = ?";
 
-        try (
-            PreparedStatement ps = getConexion().prepareStatement(sql)
-        ) {
-            ps.setInt(1, id);
+        try (PreparedStatement ps = getConexion().prepareStatement(sql)) {
+            ps.setString(1, email);
+            
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return new Usuario(
-                        rs.getInt("id_usuario"),
-                        rs.getString("nombre"),
-                        rs.getString("email")
-                    );
+                    String hashGuardado = rs.getString("password_hash");
+                    
+                    if (BCrypt.checkpw(passwordPlano, hashGuardado)) {
+                        Usuario user = new Usuario();
+                        user.setId(rs.getInt("id_usuario"));
+                        user.setEmail(rs.getString("email"));
+                        return user; 
+                    }
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error al buscar usuario: " + e.getMessage());
+            System.err.println("Error al autenticar usuario: " + e.getMessage());
         }
-
         return null;
-    }
-
-    public boolean insertarUsuario(Usuario usuario) {
-        String sql = "INSERT INTO usuario (nombre, email) VALUES (?, ?)";
-
-        try (
-            PreparedStatement ps = getConexion().prepareStatement(sql)
-        ) {
-            ps.setString(1, usuario.getNombre());
-            ps.setString(2, usuario.getEmail());
-            return ps.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            System.err.println("Error al insertar usuario: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public boolean actualizarUsuario(Usuario usuario) {
-        String sql = "UPDATE usuario SET nombre = ?, email = ? WHERE id_usuario = ?";
-
-        try (
-            PreparedStatement ps = getConexion().prepareStatement(sql)
-        ) {
-            ps.setString(1, usuario.getNombre());
-            ps.setString(2, usuario.getEmail());
-            ps.setInt(3, usuario.getId());
-            return ps.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            System.err.println("Error al actualizar usuario: " + e.getMessage());
-            return false;
-        }
     }
 }

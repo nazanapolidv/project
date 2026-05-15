@@ -1,39 +1,30 @@
 package menus;
 
+import BLL.Usuario;
+import DLL.UsuarioController;
 import javax.swing.JOptionPane;
 
 public class Registro implements Menu {
 
     @Override
     public void mostrar() {
-        JOptionPane.showMessageDialog(null,
-                "Formulario de Registro",
-                "Registro", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null, "Bienvenido al Registro de EcoTrack");
 
-        pedirDatosPersonales();
-        pedirPlan();
+        String email = JOptionPane.showInputDialog(null, "Ingresá tu e-mail:", "Registro", JOptionPane.PLAIN_MESSAGE);
+        if (email == null || email.trim().isEmpty()) return;
 
-        JOptionPane.showMessageDialog(null,
-                "Ya podes iniciar sesión con mail y contraseña.",
-                "Registro", JOptionPane.INFORMATION_MESSAGE);
-    }
+        String contrasena = JOptionPane.showInputDialog(null, "Creá una contraseña:", "Registro", JOptionPane.PLAIN_MESSAGE);
+        if (contrasena == null || contrasena.trim().isEmpty()) return;
 
-    private void pedirDatosPersonales() {
-        JOptionPane.showInputDialog(null, "Nombre:", "Registro", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "Apellido:", "Registro", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "DNI / CUIT:", "Registro", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "Dirección:", "Registro", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "Fecha de nacimiento (dd/mm/aaaa):", "Registro", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "E-mail:", "Registro", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "Contraseña:", "Registro", JOptionPane.PLAIN_MESSAGE);
-    }
+        Usuario nuevoUsuario = new Usuario(email, contrasena);
+        UsuarioController controller = new UsuarioController();
 
-    private void pedirPlan() {
-        String[] planes = { "Plan Gratuito", "Plan Empresa" };
-        JOptionPane.showOptionDialog(null,
-                "Seleccioná tu plan:",
-                "Selección de Plan",
-                0, JOptionPane.QUESTION_MESSAGE, null,
-                planes, planes[0]);
+        boolean exito = controller.registrarUsuario(nuevoUsuario, contrasena);
+
+        if (exito) {
+            JOptionPane.showMessageDialog(null, "Te registraste de manera exitosa. Podes iniciar sesión.", "EcoTrack", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(null, "Error al registrar. El e-mail podría ya estar en uso.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

@@ -1,6 +1,7 @@
-
 package menus;
 
+import BLL.Usuario;
+import DLL.UsuarioController;
 import java.net.URL;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
@@ -8,9 +9,6 @@ import javax.swing.JOptionPane;
 public class MenuPrincipal implements Menu {
 
     private static final String EMAIL_ADMIN = "admin@ecotrack.com";
-    private static final String PASS_ADMIN = "admin123";
-    private static final String EMAIL_USUARIO = "usuario@gmail.com";
-    private static final String PASS_USUARIO = "1234";
 
     @Override
     public void mostrar() {
@@ -34,7 +32,7 @@ public class MenuPrincipal implements Menu {
                 case 1 -> new Registro().mostrar();
             }
 
-        } while (seleccion != 2);
+        } while (seleccion != 2 && seleccion != JOptionPane.CLOSED_OPTION);
 
         JOptionPane.showMessageDialog(null,
                 "Gracias por usar EcoTrack",
@@ -43,20 +41,22 @@ public class MenuPrincipal implements Menu {
 
     private void iniciarSesion() {
         String email = JOptionPane.showInputDialog(null, "Ingrese su e-mail:", "Login", JOptionPane.PLAIN_MESSAGE);
-        if (email == null)
-            return;
+        if (email == null || email.trim().isEmpty()) return;
 
-        String contrasena = JOptionPane.showInputDialog(null, "Ingrese su contraseña:", "Login",
-                JOptionPane.PLAIN_MESSAGE);
-        if (contrasena == null)
-            return;
+        String contrasena = JOptionPane.showInputDialog(null, "Ingrese su contraseña:", "Login", JOptionPane.PLAIN_MESSAGE);
+        if (contrasena == null || contrasena.trim().isEmpty()) return;
 
-        if (email.equals(EMAIL_ADMIN) && contrasena.equals(PASS_ADMIN)) {
-            new MenuAdmin().mostrar();
+        UsuarioController controller = new UsuarioController();
+        Usuario usuarioLogueado = controller.autenticarUsuario(email, contrasena);
 
-        } else if (email.equals(EMAIL_USUARIO) && contrasena.equals(PASS_USUARIO)) {
-            new MenuUsuario().mostrar();
-
+        if (usuarioLogueado != null) {
+            JOptionPane.showMessageDialog(null, "¡Bienvenido " + usuarioLogueado.getEmail() + "!", "Acceso concedido", JOptionPane.INFORMATION_MESSAGE);
+            
+            if (usuarioLogueado.getEmail().equalsIgnoreCase(EMAIL_ADMIN)) {
+                new MenuAdmin().mostrar();
+            } else {
+                new MenuUsuario().mostrar();
+            }
         } else {
             JOptionPane.showMessageDialog(null,
                     "Credenciales incorrectas. Intente nuevamente.",
