@@ -1,6 +1,11 @@
 package menus;
 
 import javax.swing.JOptionPane;
+import BLL.Tarea;
+import DLL.TareaDLL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MenuAdmin implements Menu {
 
@@ -32,29 +37,59 @@ public class MenuAdmin implements Menu {
                 case 3 -> verDashboard();
             }
 
-        } while (seleccion != 4);
+        } while (seleccion != 4 && seleccion != JOptionPane.CLOSED_OPTION);
     }
 
     private void cargarTarea() {
         JOptionPane.showMessageDialog(null,
-                "── Cargar Nueva Tarea ──\nComplete los campos en los próximos pasos.",
+                "Completá los campos a continuación.",
                 "Cargar Tarea", JOptionPane.INFORMATION_MESSAGE);
 
-        JOptionPane.showInputDialog(null, "Título de la tarea:", "Cargar Tarea", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "Descripción:", "Cargar Tarea", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "Puntos a otorgar:", "Cargar Tarea", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "Fecha de caducidad (dd/mm/aaaa):", "Cargar Tarea",
-                JOptionPane.PLAIN_MESSAGE);
+        String titulo = JOptionPane.showInputDialog(null, "Título de la tarea:", "Cargar Tarea", JOptionPane.PLAIN_MESSAGE);
+        if (titulo == null || titulo.trim().isEmpty()) return;
 
-        JOptionPane.showOptionDialog(null,
-                "Seleccione el eje temático (Sello Verde GCBA):",
+        String descripcion = JOptionPane.showInputDialog(null, "Descripción:", "Cargar Tarea", JOptionPane.PLAIN_MESSAGE);
+        if (descripcion == null) return;
+
+        String puntosStr = JOptionPane.showInputDialog(null, "Puntos a otorgar:", "Cargar Tarea", JOptionPane.PLAIN_MESSAGE);
+        if (puntosStr == null || puntosStr.contains("-")) return;
+
+        String fechaStr = JOptionPane.showInputDialog(null, "Fecha de caducidad (dd/mm/aaaa):", "Cargar Tarea", JOptionPane.PLAIN_MESSAGE);
+        if (fechaStr == null) return;
+
+        int ejeSeleccionado = JOptionPane.showOptionDialog(null,
+                "Seleccioná el eje temático:",
                 "Eje Temático",
                 0, JOptionPane.QUESTION_MESSAGE, null,
                 Ejes, Ejes[0]);
 
-        JOptionPane.showMessageDialog(null,
-                "✔ Tarea publicada exitosamente para todos los usuarios.",
-                "Cargar Tarea", JOptionPane.INFORMATION_MESSAGE);
+        if (ejeSeleccionado == JOptionPane.CLOSED_OPTION) return;
+
+        String eje = Ejes[ejeSeleccionado];
+
+        try {
+            int puntos = Integer.parseInt(puntosStr);
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            sdf.setLenient(false);
+            Date fechaCaducidad = sdf.parse(fechaStr);
+
+            Tarea nuevaTarea = new Tarea(titulo, descripcion, puntos, fechaCaducidad, eje);
+            TareaDLL tareaDLL = new TareaDLL();
+
+            if (tareaDLL.crearTarea(nuevaTarea)) {
+                JOptionPane.showMessageDialog(null,
+                        "Cargaste la tarea correctamente y ya está disponible para los usuarios.",
+                        "Cargar Tarea", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Ocurrió un error, por favor, intentá nuevamente.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Error: Los puntos deben ser un valor numérico.", "Error de Ingreso", JOptionPane.ERROR_MESSAGE);
+        } catch (ParseException e) {
+            JOptionPane.showMessageDialog(null, "Error: Formato de fecha incorrecto. Debe ser dd/mm/aaaa.", "Error de Ingreso", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void validarEvidencias() {

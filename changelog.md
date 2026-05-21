@@ -5,6 +5,11 @@ Todos los cambios notables en el proyecto EcoTrack serán documentados en este a
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), 
 y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.1.3] - 2026-05-21
+
+### Add
+- Creación de tareas desde Admin
+
 ## [0.1.3] - 2026-05-14
 
 ### Add
