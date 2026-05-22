@@ -5,7 +5,18 @@ Todos los cambios notables en el proyecto EcoTrack serán documentados en este a
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), 
 y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
-## [0.1.3] - 2026-05-21
+## [0.1.5] - 2026-05-21
+
+### Add
+- Creación de eventos desde Admin
+
+### Change
+- Se elimina la opción "gestión de eventos", directamente está "crear evento". Dentro de dashboard se podrá ver los eventos creados.
+
+### Delete
+- Se eliminaron elementos hardcodeados de menuAdmin que no entraban en el scope del proyecto
+
+## [0.1.4] - 2026-05-21
 
 ### Add
 - Creación de tareas desde Admin

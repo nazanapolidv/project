@@ -2,7 +2,9 @@ package menus;
 
 import javax.swing.JOptionPane;
 import BLL.Tarea;
+import BLL.Evento;
 import DLL.TareaDLL;
+import DLL.EventoDLL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,11 +16,11 @@ public class MenuAdmin implements Menu {
     @Override
     public void mostrar() {
         String[] opciones = {
-                "Cargar Nueva Tarea",
-                "Validar Evidencias",
-                "Gestionar Eventos",
+                "Cargar nueva tarea",
+                "Validar evidencias",
+                "Crear evento",
                 "Ver Dashboard",
-                "Cerrar Sesión"
+                "Cerrar sesión"
         };
 
         int seleccion;
@@ -33,7 +35,7 @@ public class MenuAdmin implements Menu {
             switch (seleccion) {
                 case 0 -> cargarTarea();
                 case 1 -> validarEvidencias();
-                case 2 -> gestionarEventos();
+                case 2 -> crearEvento();
                 case 3 -> verDashboard();
             }
 
@@ -122,39 +124,47 @@ public class MenuAdmin implements Menu {
         }
     }
 
-    private void gestionarEventos() {
-        String[] opciones = { "Crear Nuevo Evento", "Ver Eventos Existentes", "Volver" };
-        int seleccion = JOptionPane.showOptionDialog(null,
-                "── Gestión de Eventos ──",
-                "Eventos",
-                0, JOptionPane.DEFAULT_OPTION, null,
-                opciones, opciones[0]);
-
-        switch (seleccion) {
-            case 0 -> crearEvento();
-            case 1 -> verEventosAdmin();
-        }
-    }
-
     private void crearEvento() {
-        JOptionPane.showInputDialog(null, "Título del evento:", "Nuevo Evento", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "Fecha y hora (dd/mm/aaaa hh:mm):", "Nuevo Evento",
-                JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "Ubicación:", "Nuevo Evento", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "Cupo máximo:", "Nuevo Evento", JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showInputDialog(null, "Descripción:", "Nuevo Evento", JOptionPane.PLAIN_MESSAGE);
+        String titulo = JOptionPane.showInputDialog(null, "Título del evento:", "Nuevo Evento", JOptionPane.PLAIN_MESSAGE);
+        if (titulo == null || titulo.trim().isEmpty()) return;
 
-        JOptionPane.showMessageDialog(null,
-                "✔ Evento publicado. Los usuarios recibirán una notificación.",
-                "Nuevo Evento", JOptionPane.INFORMATION_MESSAGE);
-    }
+        String fechaStr = JOptionPane.showInputDialog(null, "Fecha y hora (dd/MM/yyyy HH:mm):", "Nuevo Evento", JOptionPane.PLAIN_MESSAGE);
+        if (fechaStr == null) return;
 
-    private void verEventosAdmin() {
-        JOptionPane.showMessageDialog(null,
-                " Eventos Registrados \n\n" +
-                        "1. Jornada de reciclaje  — 20/04/2026  — Plaza Belgrano  (Cupo: 30)\n" +
-                        "2. Taller de compostaje  — 05/05/2026  — Online           (Cupo: 100)",
-                "Eventos Existentes", JOptionPane.INFORMATION_MESSAGE);
+        String ubicacion = JOptionPane.showInputDialog(null, "Ubicación:", "Nuevo Evento", JOptionPane.PLAIN_MESSAGE);
+        if (ubicacion == null) return;
+
+        String cupoStr = JOptionPane.showInputDialog(null, "Cupo máximo:", "Nuevo Evento", JOptionPane.PLAIN_MESSAGE);
+        if (cupoStr == null) return;
+
+        String descripcion = JOptionPane.showInputDialog(null, "Descripción:", "Nuevo Evento", JOptionPane.PLAIN_MESSAGE);
+        if (descripcion == null) return;
+
+        try {
+            int cupoMaximo = Integer.parseInt(cupoStr);
+            
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            sdf.setLenient(false);
+            Date fecha = sdf.parse(fechaStr);
+
+            Evento nuevoEvento = new Evento(0, titulo, fecha, cupoMaximo, ubicacion, descripcion);
+            EventoDLL eventoDLL = new EventoDLL();
+
+            if (eventoDLL.crearEvento(nuevoEvento)) {
+                JOptionPane.showMessageDialog(null,
+                        "Evento publicado. Los usuarios tendrán disponibles este nuevo evento.",
+                        "Nuevo Evento", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Ocurrió un error al guardar el evento en la base de datos.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Error: El cupo máximo debe ser un número entero.", "Error de Ingreso", JOptionPane.ERROR_MESSAGE);
+        } catch (ParseException e) {
+            JOptionPane.showMessageDialog(null, "Error: Formato de fecha/hora incorrecto. Debe ser dd/MM/yyyy HH:mm.", "Error de Ingreso", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void verDashboard() {

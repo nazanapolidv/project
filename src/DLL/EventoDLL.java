@@ -17,7 +17,7 @@ public class EventoDLL {
         try (Connection con = Conexion.getInstance().getConexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, evento.getTitulo());
-            ps.setDate(2, new java.sql.Date(evento.getFecha().getTime()));
+            ps.setTimestamp(2, new java.sql.Timestamp(evento.getFecha().getTime()));
             ps.setInt(3, evento.getCupoMaximo());
             ps.setString(4, evento.getUbicacion());
             ps.setString(5, evento.getDescripcion());
