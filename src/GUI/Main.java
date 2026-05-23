@@ -1,9 +1,5 @@
 package GUI;
 import DLL.Conexion;
-import DLL.UsuarioController;
-import java.util.List;
-
-import BLL.Usuario;
 import menus.Menu;
 import menus.MenuPrincipal;
 

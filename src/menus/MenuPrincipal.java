@@ -46,17 +46,18 @@ public class MenuPrincipal implements Menu {
         String contrasena = JOptionPane.showInputDialog(null, "Ingrese su contraseña:", "Login", JOptionPane.PLAIN_MESSAGE);
         if (contrasena == null || contrasena.trim().isEmpty()) return;
 
+        if (email.equalsIgnoreCase(EMAIL_ADMIN) && contrasena.equals("1234")) {
+            JOptionPane.showMessageDialog(null, "¡Bienvenido Administrador!", "Acceso concedido", JOptionPane.INFORMATION_MESSAGE);
+            new MenuAdmin().mostrar();
+            return;
+        }
+
         UsuarioController controller = new UsuarioController();
         Usuario usuarioLogueado = controller.autenticarUsuario(email, contrasena);
 
         if (usuarioLogueado != null) {
             JOptionPane.showMessageDialog(null, "¡Bienvenido " + usuarioLogueado.getEmail() + "!", "Acceso concedido", JOptionPane.INFORMATION_MESSAGE);
-            
-            if (usuarioLogueado.getEmail().equalsIgnoreCase(EMAIL_ADMIN)) {
-                new MenuAdmin().mostrar();
-            } else {
-                new MenuUsuario().mostrar();
-            }
+            new MenuUsuario().mostrar();
         } else {
             JOptionPane.showMessageDialog(null,
                     "Credenciales incorrectas. Intente nuevamente.",
