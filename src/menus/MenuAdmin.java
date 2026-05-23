@@ -1,6 +1,7 @@
 package menus;
 
 import javax.swing.JOptionPane;
+import DLL.DashboardDLL;
 import BLL.Tarea;
 import BLL.Evento;
 import DLL.TareaDLL;
@@ -168,18 +169,24 @@ public class MenuAdmin implements Menu {
     }
 
     private void verDashboard() {
+        DashboardDLL dashDLL = new DashboardDLL();
+
+        int usuarios = dashDLL.getCantidadUsuarios();
+        int tareasActivas = dashDLL.getTareasActivas();
+        int evidenciasPend = dashDLL.getEvidenciasPendientes();
+        int eventosProximos = dashDLL.getEventosProximos();
+        String metricasEje = dashDLL.getEvidenciasPorEje();
+
+        String mensajeDashboard = " Dashboard EcoTrack \n\n" +
+                "Usuarios registrados  : " + usuarios + "\n" +
+                "Tareas activas        : " + tareasActivas + "\n" +
+                "Evidencias pendientes : " + evidenciasPend + "\n" +
+                "Eventos próximos      : " + eventosProximos + "\n\n" +
+                "Evidencias pendientes esta semana por eje:\n" +
+                metricasEje;
+
         JOptionPane.showMessageDialog(null,
-                " Dashboard EcoTrack \n\n" +
-                        "Usuarios registrados  : 128\n" +
-                        "Tareas activas        : 5\n" +
-                        "Evidencias pendientes : 12\n" +
-                        "Eventos próximos      : 2\n\n" +
-                        "Evidencias esta semana por eje:\n" +
-                        "  Agua             : 18\n" +
-                        "  Energía          : 24\n" +
-                        "  Residuos         : 31\n" +
-                        "  Insumos          : 14\n" +
-                        "  Gestión Integral : 9",
-                "Dashboard", JOptionPane.INFORMATION_MESSAGE);
+                mensajeDashboard,
+                "Dashboard General", JOptionPane.INFORMATION_MESSAGE);
     }
 }
