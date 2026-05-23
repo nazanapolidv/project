@@ -4,11 +4,14 @@ import javax.swing.JOptionPane;
 import DLL.DashboardDLL;
 import BLL.Tarea;
 import BLL.Evento;
+import BLL.Evidencia;
+import DLL.EvidenciaDLL;
 import DLL.TareaDLL;
 import DLL.EventoDLL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 public class MenuAdmin implements Menu {
 
@@ -96,31 +99,49 @@ public class MenuAdmin implements Menu {
     }
 
     private void validarEvidencias() {
-        JOptionPane.showMessageDialog(null,
-                "── Evidencias Pendientes de Revisión ──\n\n" +
-                        "Usuario : juan.perez@gmail.com\n" +
-                        "Tarea   : Separación de residuos domiciliarios\n" +
-                        "Archivo : foto_residuos.jpg\n" +
-                        "Fecha   : 14/04/2026",
+        EvidenciaDLL evidenciaDLL = new EvidenciaDLL();
+        List<Evidencia> pendientes = evidenciaDLL.obtenerEvidenciasPendientes();
+
+        if (pendientes.isEmpty()) {
+            JOptionPane.showMessageDialog(null, 
+                "No hay evidencias pendientes de revisión.", 
                 "Validar Evidencias", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
 
-        String[] acciones = { "Aprobar", "Rechazar", "Volver" };
-        int accion = JOptionPane.showOptionDialog(null,
-                "¿Qué desea hacer con esta evidencia?",
-                "Validar Evidencia",
-                0, JOptionPane.QUESTION_MESSAGE, null,
-                acciones, acciones[0]);
+        for (Evidencia ev : pendientes) {
+            String mensaje = "── Evidencias Pendientes ──\n\n" +
+                    "Cliente : " + ev.getNombreCliente() + "\n" +
+                    "Tarea   : " + ev.getTituloTarea() + "\n" +
+                    "Puntos  : " + ev.getPuntosTarea() + "\n" +
+                    "Archivo : " + ev.getArchivoUrl() + "\n" +
+                    "Fecha   : " + ev.getFechaSubida() + "\n\n" +
+                    "¿Qué desea hacer con esta evidencia?";
 
-        switch (accion) {
-            case 0 -> JOptionPane.showMessageDialog(null,
-                    "✔ Evidencia aprobada. Se acreditaron 50 puntos al usuario.",
-                    "Validar Evidencias", JOptionPane.INFORMATION_MESSAGE);
-            case 1 -> {
-                JOptionPane.showInputDialog(null, "Motivo del rechazo:", "Rechazar Evidencia",
-                        JOptionPane.PLAIN_MESSAGE);
-                JOptionPane.showMessageDialog(null,
-                        "✘ Evidencia rechazada. Se notificó al usuario.",
-                        "Validar Evidencias", JOptionPane.WARNING_MESSAGE);
+            String[] acciones = { "Aprobar", "Rechazar", "Salir de revisión" };
+            int accion = JOptionPane.showOptionDialog(null,
+                    mensaje,
+                    "Validar Evidencia",
+                    0, JOptionPane.QUESTION_MESSAGE, null,
+                    acciones, acciones[0]);
+
+            if (accion == 0) { 
+                if (evidenciaDLL.procesarEvidencia(ev.getIdEvidencia(), ev.getIdCliente(), ev.getPuntosTarea(), true)) {
+                    JOptionPane.showMessageDialog(null,
+                            "Evidencia aprobada. Se sumaron " + ev.getPuntosTarea() + " puntos al usuario.",
+                            "Validar Evidencias", JOptionPane.INFORMATION_MESSAGE);
+                }
+            } else if (accion == 1) {
+                String motivo = JOptionPane.showInputDialog(null, "Motivo del rechazo:", "Rechazar Evidencia", JOptionPane.PLAIN_MESSAGE);
+                if (motivo != null) { 
+                    if (evidenciaDLL.procesarEvidencia(ev.getIdEvidencia(), ev.getIdCliente(), 0, false)) {
+                        JOptionPane.showMessageDialog(null,
+                                "Evidencia rechazada. (Motivo: " + motivo + ")",
+                                "Validar Evidencias", JOptionPane.WARNING_MESSAGE);
+                    }
+                }
+            } else if (accion == JOptionPane.CLOSED_OPTION) {
+                break;
             }
         }
     }
