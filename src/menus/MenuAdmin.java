@@ -100,9 +100,16 @@ public class MenuAdmin implements Menu {
 
     private void validarEvidencias() {
         EvidenciaDLL evidenciaDLL = new EvidenciaDLL();
-        List<Evidencia> pendientes = evidenciaDLL.obtenerEvidenciasPendientes();
+        List<Evidencia> pendientes = null;
 
-        if (pendientes.isEmpty()) {
+      
+        try {
+            pendientes = evidenciaDLL.obtenerEvidenciasPendientes();
+        } catch (Exception e) {
+            System.err.println("Error al conectar u obtener evidencias: " + e.getMessage());
+        }
+
+        if (pendientes == null || pendientes.isEmpty()) {
             JOptionPane.showMessageDialog(null, 
                 "No hay evidencias pendientes de revisión.", 
                 "Validar Evidencias", JOptionPane.INFORMATION_MESSAGE);
@@ -110,12 +117,13 @@ public class MenuAdmin implements Menu {
         }
 
         for (Evidencia ev : pendientes) {
+           
             String mensaje = "── Evidencias Pendientes ──\n\n" +
-                    "Cliente : " + ev.getNombreCliente() + "\n" +
-                    "Tarea   : " + ev.getTituloTarea() + "\n" +
-                    "Puntos  : " + ev.getPuntosTarea() + "\n" +
-                    "Archivo : " + ev.getArchivoUrl() + "\n" +
-                    "Fecha   : " + ev.getFechaSubida() + "\n\n" +
+                    "ID Evidencia : " + ev.getIdEvidencia() + "\n" +
+                    "ID Usuario   : " + ev.getIdCliente() + "\n" +
+                    "ID Tarea     : " + ev.getIdTarea() + "\n" +
+                    "Archivo URL  : " + ev.getArchivoUrl() + "\n" +
+                    "Fecha Envío  : " + ev.getFechaSubida() + "\n\n" +
                     "¿Qué desea hacer con esta evidencia?";
 
             String[] acciones = { "Aprobar", "Rechazar", "Salir de revisión" };
@@ -125,22 +133,33 @@ public class MenuAdmin implements Menu {
                     0, JOptionPane.QUESTION_MESSAGE, null,
                     acciones, acciones[0]);
 
+           
             if (accion == 0) { 
-                if (evidenciaDLL.procesarEvidencia(ev.getIdEvidencia(), ev.getIdCliente(), ev.getPuntosTarea(), true)) {
+                
+                int puntosRecompensa = 50;
+                if (evidenciaDLL.procesarEvidencia(ev.getIdEvidencia(), ev.getIdCliente(), puntosRecompensa, true)) {
                     JOptionPane.showMessageDialog(null,
-                            "Evidencia aprobada. Se sumaron " + ev.getPuntosTarea() + " puntos al usuario.",
+                            "Evidencia aprobada con éxito. Se le asignaron " + puntosRecompensa + " puntos al usuario.",
                             "Validar Evidencias", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Error al procesar la aprobación en la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
-            } else if (accion == 1) {
+            } 
+            
+            else if (accion == 1) {
                 String motivo = JOptionPane.showInputDialog(null, "Motivo del rechazo:", "Rechazar Evidencia", JOptionPane.PLAIN_MESSAGE);
                 if (motivo != null) { 
                     if (evidenciaDLL.procesarEvidencia(ev.getIdEvidencia(), ev.getIdCliente(), 0, false)) {
                         JOptionPane.showMessageDialog(null,
                                 "Evidencia rechazada. (Motivo: " + motivo + ")",
                                 "Validar Evidencias", JOptionPane.WARNING_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Error al registrar el rechazo en la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
-            } else if (accion == JOptionPane.CLOSED_OPTION) {
+            } 
+            
+            else if (accion == 2 || accion == JOptionPane.CLOSED_OPTION) {
                 break;
             }
         }

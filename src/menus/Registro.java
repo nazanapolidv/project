@@ -1,8 +1,8 @@
 package menus;
 
+import javax.swing.JOptionPane;
 import BLL.Usuario;
 import DLL.UsuarioController;
-import javax.swing.JOptionPane;
 
 public class Registro implements Menu {
 
@@ -16,15 +16,18 @@ public class Registro implements Menu {
         String contrasena = JOptionPane.showInputDialog(null, "Creá una contraseña:", "Registro", JOptionPane.PLAIN_MESSAGE);
         if (contrasena == null || contrasena.trim().isEmpty()) return;
 
-        Usuario nuevoUsuario = new Usuario(email, contrasena);
-        UsuarioController controller = new UsuarioController();
+        
+        Usuario nuevoUsuario = new Usuario();
+        nuevoUsuario.setEmail(email);
 
+        
+        UsuarioController controller = new UsuarioController();
         boolean exito = controller.registrarUsuario(nuevoUsuario, contrasena);
 
         if (exito) {
-            JOptionPane.showMessageDialog(null, "Te registraste de manera exitosa. Podes iniciar sesión.", "EcoTrack", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Te registraste de manera exitosa. Podés iniciar sesión.", "EcoTrack", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(null, "Error al registrar. El e-mail podría ya estar en uso.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Error al registrar. El e-mail podría ya estar en uso o el servidor no responde.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

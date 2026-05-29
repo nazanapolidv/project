@@ -10,17 +10,39 @@ import java.util.List;
 
 public class EvidenciaDLL {
 
+    private Connection getConexion() {
+        return Conexion.getInstance().getConexion();
+    }
+
+   
+    public boolean agregarEvidencia(Evidencia evidencia) {
+        String sql = "INSERT INTO evidencia (id_cliente, id_tarea, archivo_url, estado, fecha_subida) VALUES (?, ?, ?, 'Pendiente de revisión', NOW())";
+        
+        try (PreparedStatement ps = getConexion().prepareStatement(sql)) {
+            ps.setInt(1, evidencia.getIdCliente());
+            ps.setInt(2, evidencia.getIdTarea());
+            ps.setString(3, evidencia.getArchivoUrl());
+            
+            return ps.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error en EvidenciaDLL al insertar: " + e.getMessage());
+            return false;
+        }
+    }
+
+    
     public List<Evidencia> obtenerEvidenciasPendientes() {
         List<Evidencia> lista = new ArrayList<>();
-        String sql = "SELECT e.id_evidencia, e.id_cliente, e.id_tarea, e.archivo_url, e.fecha_subida, " +
-                     "c.nombre_o_razon_social, t.titulo, t.puntos_otorgados " +
+        
+        String sql = "SELECT e.id_evidencia, e.id_cliente, e.id_tarea, e.archivo_url, e.estado, e.fecha_subida, " +
+                     "u.email AS nombre_cliente, t.titulo AS titulo_tarea, t.puntos AS puntos_tarea " +
                      "FROM evidencia e " +
-                     "JOIN cliente c ON e.id_cliente = c.id_cliente " +
-                     "JOIN tarea t ON e.id_tarea = t.id_tarea " +
-                     "WHERE e.estado = 'Pendiente'";
+                     "INNER JOIN usuario u ON e.id_cliente = u.id_usuario " +
+                     "INNER JOIN tarea t ON e.id_tarea = t.id_tarea " +
+                     "WHERE e.estado = 'Pendiente de revisión'";
 
-        try (Connection con = Conexion.getInstance().getConexion();
-             PreparedStatement ps = con.prepareStatement(sql);
+        try (PreparedStatement ps = getConexion().prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
@@ -29,53 +51,72 @@ public class EvidenciaDLL {
                 ev.setIdCliente(rs.getInt("id_cliente"));
                 ev.setIdTarea(rs.getInt("id_tarea"));
                 ev.setArchivoUrl(rs.getString("archivo_url"));
+                ev.setEstado(rs.getString("estado"));
                 ev.setFechaSubida(rs.getTimestamp("fecha_subida"));
-                ev.setNombreCliente(rs.getString("nombre_o_razon_social"));
-                ev.setTituloTarea(rs.getString("titulo"));
-                ev.setPuntosTarea(rs.getInt("puntos_otorgados"));
+                
+                
+                ev.setNombreCliente(rs.getString("nombre_cliente"));
+                ev.setTituloTarea(rs.getString("titulo_tarea"));
+                ev.setPuntosTarea(rs.getInt("puntos_tarea"));
+
                 lista.add(ev);
             }
         } catch (SQLException e) {
-            System.out.println("Error [EvidenciaDLL - listar]: " + e.getMessage());
+            System.err.println("Error al obtener evidencias pendientes: " + e.getMessage());
         }
         return lista;
     }
 
-    public boolean procesarEvidencia(int idEvidencia, int idCliente, int puntos, boolean aprobada) {
-        String estadoNuevo = aprobada ? "Aprobada" : "Rechazada";
+    
+    public boolean procesarEvidencia(int idEvidencia, int idCliente, int puntos, boolean aprobado) {
+        String nuevoEstado = aprobado ? "Aprobada" : "Rechazada";
         String sqlUpdateEvidencia = "UPDATE evidencia SET estado = ? WHERE id_evidencia = ?";
-        String sqlUpdatePuntos = "UPDATE cliente SET puntos_acumulados = puntos_acumulados + ? WHERE id_cliente = ?";
         
-        Connection con = null;
+        
+        String sqlUpdatePuntos = "UPDATE usuario SET puntos = puntos + ? WHERE id_usuario = ?";
+
+        Connection conn = null;
         try {
-            con = Conexion.getInstance().getConexion();
-            con.setAutoCommit(false); 
-            try (PreparedStatement psEvidencia = con.prepareStatement(sqlUpdateEvidencia)) {
-                psEvidencia.setString(1, estadoNuevo);
-                psEvidencia.setInt(2, idEvidencia);
-                psEvidencia.executeUpdate();
+            conn = getConexion();
+            
+            conn.setAutoCommit(false);
+
+            
+            try (PreparedStatement psEv = conn.prepareStatement(sqlUpdateEvidencia)) {
+                psEv.setString(1, nuevoEstado);
+                psEv.setInt(2, idEvidencia);
+                psEv.executeUpdate();
             }
 
-            if (aprobada) {
-                try (PreparedStatement psPuntos = con.prepareStatement(sqlUpdatePuntos)) {
-                    psPuntos.setInt(1, puntos);
-                    psPuntos.setInt(2, idCliente);
-                    psPuntos.executeUpdate();
+            
+            if (aprobado && puntos > 0) {
+                try (PreparedStatement psPts = conn.prepareStatement(sqlUpdatePuntos)) {
+                    psPts.setInt(1, puntos);
+                    psPts.setInt(2, idCliente);
+                    psPts.executeUpdate();
                 }
             }
 
-            con.commit();
+            conn.commit(); 
             return true;
 
         } catch (SQLException e) {
-            if (con != null) {
-                try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            System.err.println("Error al procesar la validación de la evidencia: " + e.getMessage());
+            if (conn != null) {
+                try {
+                    conn.rollback(); 
+                } catch (SQLException ex) {
+                    System.err.println("Error en el rollback: " + ex.getMessage());
+                }
             }
-            System.out.println("Error [EvidenciaDLL - procesar]: " + e.getMessage());
             return false;
         } finally {
-            if (con != null) {
-                try { con.setAutoCommit(true); con.close(); } catch (SQLException e) { e.printStackTrace(); }
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException e) {
+                    System.err.println("Error al restaurar autoCommit: " + e.getMessage());
+                }
             }
         }
     }
