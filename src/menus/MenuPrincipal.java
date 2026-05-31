@@ -40,6 +40,7 @@ public class MenuPrincipal implements Menu {
     }
 
     private void iniciarSesion() {
+    	
         String email = JOptionPane.showInputDialog(null, "Ingrese su e-mail:", "Login", JOptionPane.PLAIN_MESSAGE);
         if (email == null || email.trim().isEmpty()) return;
 
@@ -48,6 +49,12 @@ public class MenuPrincipal implements Menu {
 
         UsuarioController controller = new UsuarioController();
         Usuario usuarioLogueado = controller.autenticarUsuario(email, contrasena);
+        
+        if (email.equalsIgnoreCase(EMAIL_ADMIN) && contrasena.equals("1234")) {
+            JOptionPane.showMessageDialog(null, "¡Bienvenido Administrador!", "Acceso concedido", JOptionPane.INFORMATION_MESSAGE);
+            new MenuAdmin().mostrar();
+            return;
+        }
 
         if (usuarioLogueado != null) {
             JOptionPane.showMessageDialog(null, "¡Bienvenido " + usuarioLogueado.getEmail() + "!", "Acceso concedido", JOptionPane.INFORMATION_MESSAGE);
