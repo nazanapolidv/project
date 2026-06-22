@@ -1,4 +1,5 @@
 package DAO;
+import BLL.Cliente;
 import BLL.Usuario;
 import DLL.Conexion;
 import org.mindrot.jbcrypt.BCrypt;
@@ -15,30 +16,64 @@ public class UsuarioDAOImpl implements UsuarioDAO {
     }
 
     @Override
-    public boolean registrarUsuario(Usuario usuario, String passwordPlano) {
+    public boolean registrarUsuario(Usuario usuario, Cliente cliente, String passwordPlano) {
         Connection conn = getConexion();
         if (conn == null) return false;
 
         String sqlUsuario = "INSERT INTO usuario (email, password_hash) VALUES (?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sqlUsuario, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, usuario.getEmail());
-            ps.setString(2, BCrypt.hashpw(passwordPlano, BCrypt.gensalt()));
-            if (ps.executeUpdate() == 0) return false;
+        String sqlCliente = "INSERT INTO cliente "
+                + "(id_cliente, nombre_o_razon_social, apellido, dni_cuit, direccion, fecha_nacimiento, tipo_plan, puntos_acumulados) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (!keys.next()) return false;
-                int idGenerado = keys.getInt(1);
+        try {
+            conn.setAutoCommit(false);
 
-                String sqlCliente = "INSERT INTO cliente (id_cliente, puntos_acumulados, tipo_plan) VALUES (?, 0, 'basico')";
-                try (PreparedStatement psC = conn.prepareStatement(sqlCliente)) {
-                    psC.setInt(1, idGenerado);
-                    psC.executeUpdate();
+            int idGenerado;
+            try (PreparedStatement ps = conn.prepareStatement(sqlUsuario, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, usuario.getEmail());
+                ps.setString(2, BCrypt.hashpw(passwordPlano, BCrypt.gensalt()));
+                if (ps.executeUpdate() == 0) {
+                    conn.rollback();
+                    return false;
+                }
+                try (ResultSet keys = ps.getGeneratedKeys()) {
+                    if (!keys.next()) {
+                        conn.rollback();
+                        return false;
+                    }
+                    idGenerado = keys.getInt(1);
                 }
             }
+
+            try (PreparedStatement ps = conn.prepareStatement(sqlCliente)) {
+                ps.setInt(1, idGenerado);
+                ps.setString(2, cliente.getNombreORazonSocial());
+                ps.setString(3, cliente.getApellido());
+                ps.setString(4, cliente.getDniCuit());
+                ps.setString(5, cliente.getDireccion());
+                if (cliente.getFechaNacimiento() != null) {
+                    ps.setDate(6, new java.sql.Date(cliente.getFechaNacimiento().getTime()));
+                } else {
+                    ps.setNull(6, java.sql.Types.DATE);
+                }
+                ps.setString(7, cliente.getTipoPlan());
+                ps.setInt(8, cliente.getPuntosAcumulados()); // arranca en 0 (un cliente nuevo no tiene puntos)
+                ps.executeUpdate();
+            }
+
+            conn.commit();
             return true;
+
         } catch (SQLException e) {
-            System.err.println("Error en UsuarioDAOImpl al registrar: " + e.getMessage());
+            System.err.println("Error en UsuarioDAOImpl al registrar (usuario + cliente): " + e.getMessage());
+            try { conn.rollback(); } catch (SQLException ex) {
+                System.err.println("Error en rollback: " + ex.getMessage());
+            }
             return false;
+        } finally {
+            try { conn.setAutoCommit(true); } catch (SQLException e) {
+                System.err.println("Error al restaurar autoCommit: " + e.getMessage());
+            }
         }
     }
 
