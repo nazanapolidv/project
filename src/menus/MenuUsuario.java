@@ -2,6 +2,9 @@ package menus;
 
 import javax.swing.JOptionPane;
 import DLL.UsuarioController;
+import DAO.EvidenciaDAO;
+import DAO.EvidenciaDAOImpl;
+import BLL.Evidencia;
 
 public class MenuUsuario implements Menu {
 
@@ -89,13 +92,15 @@ public class MenuUsuario implements Menu {
             return;
         }
 
-        BLL.Evidencia nuevaEvidencia = new BLL.Evidencia();
+        
+        Evidencia nuevaEvidencia = new Evidencia();
         nuevaEvidencia.setIdCliente(idUsuarioLogueado);
         nuevaEvidencia.setIdTarea(idTareaBD);
         nuevaEvidencia.setArchivoUrl(rutaArchivo);
 
-        DLL.EvidenciaDLL evDLL = new DLL.EvidenciaDLL();
-        boolean guardadoExitoso = evDLL.agregarEvidencia(nuevaEvidencia);
+        
+        EvidenciaDAO evidenciaDAO = new EvidenciaDAOImpl();
+        boolean guardadoExitoso = evidenciaDAO.agregarEvidencia(nuevaEvidencia);
 
         if (guardadoExitoso) {
             JOptionPane.showMessageDialog(null,
@@ -202,18 +207,13 @@ public class MenuUsuario implements Menu {
                 0, JOptionPane.QUESTION_MESSAGE, null,
                 premios, premios[0]);
 
-        
         int[] costos = { 100, 200, 350, 500 };
 
-        
         if (seleccion >= 0 && seleccion <= 3) {
             int costoPremio = costos[seleccion];
             String nombrePremio = premios[seleccion];
 
-            
             if (puntosReales >= costoPremio) {
-                
-                
                 boolean canjeExitoso = usuarioController.reducirPuntosUsuario(idUsuarioLogueado, costoPremio);
 
                 if (canjeExitoso) {

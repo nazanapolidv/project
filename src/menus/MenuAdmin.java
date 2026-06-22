@@ -5,9 +5,13 @@ import DLL.DashboardDLL;
 import BLL.Tarea;
 import BLL.Evento;
 import BLL.Evidencia;
-import DLL.EvidenciaDLL;
 import DLL.TareaDLL;
 import DLL.EventoDLL;
+
+
+import DAO.EvidenciaDAO;
+import DAO.EvidenciaDAOImpl;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -99,12 +103,13 @@ public class MenuAdmin implements Menu {
     }
 
     private void validarEvidencias() {
-        EvidenciaDLL evidenciaDLL = new EvidenciaDLL();
+        
+        EvidenciaDAO evidenciaDAO = new EvidenciaDAOImpl();
         List<Evidencia> pendientes = null;
 
-      
         try {
-            pendientes = evidenciaDLL.obtenerEvidenciasPendientes();
+            
+            pendientes = evidenciaDAO.obtenerEvidenciasPendientes();
         } catch (Exception e) {
             System.err.println("Error al conectar u obtener evidencias: " + e.getMessage());
         }
@@ -137,7 +142,8 @@ public class MenuAdmin implements Menu {
             if (accion == 0) { 
                 
                 int puntosRecompensa = 50;
-                if (evidenciaDLL.procesarEvidencia(ev.getIdEvidencia(), ev.getIdCliente(), puntosRecompensa, true)) {
+                
+                if (evidenciaDAO.procesarEvidencia(ev.getIdEvidencia(), ev.getIdCliente(), puntosRecompensa, true)) {
                     JOptionPane.showMessageDialog(null,
                             "Evidencia aprobada con éxito. Se le asignaron " + puntosRecompensa + " puntos al usuario.",
                             "Validar Evidencias", JOptionPane.INFORMATION_MESSAGE);
@@ -149,7 +155,8 @@ public class MenuAdmin implements Menu {
             else if (accion == 1) {
                 String motivo = JOptionPane.showInputDialog(null, "Motivo del rechazo:", "Rechazar Evidencia", JOptionPane.PLAIN_MESSAGE);
                 if (motivo != null) { 
-                    if (evidenciaDLL.procesarEvidencia(ev.getIdEvidencia(), ev.getIdCliente(), 0, false)) {
+                    
+                    if (evidenciaDAO.procesarEvidencia(ev.getIdEvidencia(), ev.getIdCliente(), 0, false)) {
                         JOptionPane.showMessageDialog(null,
                                 "Evidencia rechazada. (Motivo: " + motivo + ")",
                                 "Validar Evidencias", JOptionPane.WARNING_MESSAGE);
